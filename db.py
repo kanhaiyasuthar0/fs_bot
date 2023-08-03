@@ -5,7 +5,7 @@ db = peewee.PostgresqlDatabase(
     user="postgres",
     password="postgrespw",
     host="localhost",
-    port="55000",
+    port="55006",
 )
 
 

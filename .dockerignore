@@ -1,0 +1,6 @@
+.env
+.vscode
+node_modules
+bot.js
+bot1.py
+package-lock.json
