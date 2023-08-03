@@ -56,7 +56,7 @@ async def launch_web_ui(update: Update, callback: CallbackContext):
     # print("update", update, "callback", callback)
     try:
         print("contact number shared", update)
-        subprocess.run("pbcopy", text=True, input="copied")
+        # subprocess.run("pbcopy", text=True, input="copied")
 
         phone_number = ""
         first_name = ""
