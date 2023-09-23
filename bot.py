@@ -1,4 +1,5 @@
 import subprocess
+import telegram
 from telegram import (
     InlineKeyboardMarkup,
     Update,
@@ -8,7 +9,10 @@ from telegram import (
     InlineKeyboardButton,
     MenuButton,
     ReplyKeyboardRemove,
+    MenuButtonWebApp,
 )
+from telegram import _bot
+import requests
 from telegram.ext import (
     ApplicationBuilder,
     CallbackContext,
@@ -38,22 +42,17 @@ async def start(update: Update, context: CallbackContext):
         text="Please share your mobile number:",
         reply_markup=reply_markup,
     )
-    print("going response", response)
-    print("going update", update)
-    print("going context", context)
-
+    data = {
+        "commands": [],
+    }
+    send_telegram_message("s", 1, "", data)
     message_id = response.message_id
     context.user_data["message_id"] = message_id
 
 
 async def launch_web_ui(update: Update, callback: CallbackContext):
-    # For now, let's just acknowledge that we received the command
-    # print("sending the option to launch web ui", update)
     query = update.callback_query
-    # console.log("🚀 ~ file: bot.py:51 ~ update:", update)
-    # console.log("🚀 ~ file: bot.py:48 ~ callback:", callback)
 
-    # print("update", update, "callback", callback)
     try:
         print("contact number shared", update)
         # subprocess.run("pbcopy", text=True, input="copied")
@@ -64,22 +63,49 @@ async def launch_web_ui(update: Update, callback: CallbackContext):
             phone_number = update.message.contact.phone_number
             first_name = update.message.contact.first_name
             button_text = checkAndReturn(phone_number)
-            kb = [
-                [
-                    InlineKeyboardButton(
-                        button_text,
-                        web_app=WebAppInfo(
-                            # f"https://calm-profiterole-ca4923.netlify.app/?mobileNumber={phone_number}&&first_name={first_name}"
-                            f"https://feedback-beryl-eight.vercel.app/?mobileNumber={phone_number}&&first_name={first_name}&&button_text={button_text}"
-                        ),
-                    )
-                ]
-            ]
+            type = checkType(button_text)
+            data = {
+                "commands": [
+                    {"command": "feedback", "description": "scome"},
+                    {"command": "account", "description": "As"},
+                ],
+            }
+            send_telegram_message("s", 1, "", data)
+            # async set_chat_menu_button()
+            # reply_markup = MenuButtonWebApp(
+            #     text="web_app",
+            #     web_app=WebAppInfo(
+            #         f"https://feedback-beryl-eight.vercel.app/?mobileNumber=phone_number&&first_name=first_name&&button_text=button_text&&type=type"
+            #     ),
+            # )
+            # _bot.set_chat_menu_button()
 
-            response = await update.message.reply_text(
-                "Let's do this...", reply_markup=InlineKeyboardMarkup(kb)
-            )
-            print("REPONSE", response)
+            # await update.message.reply_text(
+            #     "Click the button to open the web app:",
+            #     reply_markup=MenuButton(web_app_data=MenuButtonWebApp),
+            # )
+            # InlineKeyboardButton()
+            # kb= [MenuButton( web_app=WebAppInfo(
+            #                 # f"https://calm-profiterole-ca4923.netlify.app/?mobileNumber={phone_number}&&first_name={first_name}"
+            #                 f"https://feedback-beryl-eight.vercel.app/?mobileNumber={phone_number}&&first_name={first_name}&&button_text={button_text}&&type={type}"
+            #             )]
+
+            # kb = [
+            #     [
+            #         InlineKeyboardButton(
+            #             button_text,
+            #             web_app=WebAppInfo(
+            #                 # f"https://calm-profiterole-ca4923.netlify.app/?mobileNumber={phone_number}&&first_name={first_name}"
+            #                 f"https://feedback-beryl-eight.vercel.app/?mobileNumber={phone_number}&&first_name={first_name}&&button_text={button_text}&&type={type}"
+            #             ),
+            #         )
+            #     ]
+            # ]
+
+            # response = await update.message.reply_text(
+            #     "Let's do this...", reply_markup=InlineKeyboardMarkup(kb)
+            # )
+            # print("REPONSE", response)
 
         else:
             print("web app replied", update)
@@ -142,13 +168,96 @@ def checkAndReturn(phone_number):
         return "Give feedback"
 
 
+def checkType(text):
+    if text == "Fill account details":
+        return "2"
+    else:
+        return "1"
+
+
+async def open_web_app(update: Update, context: CallbackContext):
+    print("INSIDE")
+    # Construct the URL of the web app
+    web_app_url = "https://your-web-app-url.com"  # Replace with your web app's URL
+
+    # Create an inline keyboard button with the web app URL
+    keyboard = [[InlineKeyboardButton("Open Web App", url=web_app_url)]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    # Send a message with the inline keyboard button
+    await update.message.reply_text(
+        "Click the button to open the web app:", reply_markup=reply_markup
+    )
+
+
+def send_telegram_message(chat_id, type, command, data):
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/setMyCommands"
+
+    try:
+        response = requests.post(url, json=data)
+        response.raise_for_status()  # Check for HTTP errors
+        print("success")
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print("Error:", e)
+        return None
+
+
+# def setmenubutton(chat_id, type, command, data):
+# MY_WEBSITE = "https://www.youtube.com"  # Replace with your actual website URL
+
+# data = {
+#     "chat_id": chat_id,
+#     "menu_button": {
+#         "type": "web_app",
+#         "text": "Menu",
+#         "web_app": {"url": MY_WEBSITE},
+#     },
+# }
+
+# url = f"https://api.telegram.org/bot{BOT_TOKEN}/setChatMenuButton"
+
+# headers = {"Content-Type": "application/json"}
+
+# response = requests.post(url, json=data, headers=headers)
+# print(response, "resp")
+
+
+async def feedback(update: Update, callback: CallbackContext):
+    # print(update, "update")
+    # phone_number = update.message.contact.phone_number
+    # print(phone_number, "phone_number")
+    # first_name = "update.message.contact.first_name"
+    # button_text = checkAndReturn(phone_number)
+    # type = checkType(button_text)
+    kb = [
+        [
+            InlineKeyboardButton(
+                "button_text",
+                web_app=WebAppInfo(
+                    # f"https://calm-profiterole-ca4923.netlify.app/?mobileNumber={phone_number}&&first_name={first_name}"
+                    f"https://feedback-beryl-eight.vercel.app/?mobileNumber=phone_number&&first_name=first_name&&button_text=button_text&&type=as"
+                ),
+            )
+        ]
+    ]
+    setmenubutton(1465932798, 1, "command", "data")
+
+    response = await update.message.reply_text(
+        "Let's do this...", reply_markup=InlineKeyboardMarkup(kb)
+    )
+
+
 application = ApplicationBuilder().token(BOT_TOKEN).build()
 # updater = Updater(BOT_TOKEN, use_context=True)
 # dispatcher = updater.dispatcher
 
 # and let's set a command listener for /start to trigger our Web UI
 application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("openwebapp", open_web_app))
+application.add_handler(CommandHandler("feedback", feedback))
 application.add_handler(MessageHandler(filters.ALL, launch_web_ui))
+# application.add_handler(CommandHandler("feedback", open_web_app))
 # application.add_handler(CallbackQueryHandler(start, "start"))
 # application.add_handler(CallbackQueryHandler(launch_web_ui, "^done_feedback$"))
 # application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data))
